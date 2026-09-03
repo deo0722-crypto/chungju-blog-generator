@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>충주 문화도시센터 블로그 초안 생성기</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎭 공연 블로그 초안 생성기</h1>
+      <p class="subtitle">충주문화관광재단 문화도시센터 · 티켓 판매 최적화 네이버 블로그 글 작성 도우미</p>
+    </header>
+
+    <main>
+      <section class="form-section">
+        <form id="blog-form">
+          <label for="title">공연명</label>
+          <input type="text" id="title" name="title" placeholder="예: 2026 충주 가을 국악 공연" required />
+
+          <label for="target">타겟 독자</label>
+          <input type="text" id="target" name="target" placeholder="예: 20~30대 여성, 아이와 함께 온 가족 등" required />
+
+          <label for="keyInfo">주요 홍보 내용 · 일정 · 가격</label>
+          <textarea id="keyInfo" name="keyInfo" rows="6" placeholder="공연 소개, 일시, 장소, 티켓 가격, 예매처 등을 자유롭게 적어주세요." required></textarea>
+
+          <label for="photoInfo">첨부할 사진/이미지 정보 (선택)</label>
+          <input type="text" id="photoInfo" name="photoInfo" placeholder="예: 사진1 포스터, 사진2 공연장 전경, 사진3 리허설 현장" />
+
+          <button type="submit" id="generate-btn">블로그 글 생성하기</button>
+        </form>
+      </section>
+
+      <section class="output-section">
+        <div class="output-header">
+          <h2>생성된 블로그 글 초안</h2>
+          <button id="copy-btn" type="button" disabled>텍스트 복사하기</button>
+        </div>
+        <textarea id="output" readonly placeholder="왼쪽 양식을 채우고 '블로그 글 생성하기'를 누르면 여기에 초안이 나타나요."></textarea>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
