@@ -37,28 +37,38 @@ npm start
 
 `server.js` 안의 `model: 'claude-opus-5'` 부분을 `'claude-sonnet-5'`로 바꾸면 훨씬 저렴하면서도 블로그 글 품질은 충분히 좋습니다.
 
-## 4. 인터넷에 배포하기 (선택, Vercel 무료 티어 기준)
+## 4. 인터넷에 배포하기 (Vercel 무료 티어)
 
-로컬 테스트가 끝나고 실제로 다른 사람도 쓸 수 있게 하려면:
+배포하면 주소만 있으면 어느 컴퓨터/휴대폰에서든 접속해서 바로 쓸 수 있어요. **각자 컴퓨터에 .env를 따로 설정할 필요가 없어집니다.**
 
-1. https://vercel.com 가입 (GitHub 계정으로 로그인 가능)
-2. 이 프로젝트 폴더를 GitHub 저장소에 올리기
-3. Vercel 대시보드 → **Add New Project** → 방금 올린 저장소 선택
-4. **Environment Variables**에 `ANTHROPIC_API_KEY` 추가 (값: 발급받은 키)
-5. **Deploy** 클릭 → 몇 분 뒤 `https://내프로젝트.vercel.app` 주소로 접속 가능
+1. https://vercel.com 접속 → **GitHub 계정으로 로그인**
+2. 대시보드에서 **Add New... → Project** 클릭
+3. 이 저장소(`chungju-blog-generator`)를 목록에서 찾아 **Import** 클릭
+4. **Environment Variables** 항목에 아래처럼 추가:
+   - Key: `ANTHROPIC_API_KEY`
+   - Value: 발급받은 `sk-ant-...` 키
+5. **Deploy** 버튼 클릭 → 1~2분 후 `https://프로젝트이름.vercel.app` 주소 생성됨
+6. 이 주소를 아무 컴퓨터/휴대폰 브라우저에서 열면 바로 사용 가능
 
-> 참고: 현재 코드는 Express 서버 형태라 Vercel에 그대로 올리면 서버리스 함수로 자동 변환되지 않을 수 있습니다. Vercel 배포 시에는 `server.js`의 `/api/generate` 로직을 `api/generate.js` 서버리스 함수 파일로 옮기는 작업이 추가로 필요합니다. 로컬 사용만 필요하시면 이 단계는 건너뛰셔도 됩니다.
+> 코드는 이미 Vercel용으로 준비되어 있어요: 정적 화면은 `public/`, 서버리스 함수는 `api/generate.js`가 담당하고, `vercel.json`이 홈 화면 경로를 연결해줍니다.
+
+> ⚠️ **사진 업로드 용량 제한**: Vercel 무료 티어는 요청 하나의 크기가 **4.5MB**로 제한돼요. 로컬(내 컴퓨터)에서는 사진 5장(각 5MB)까지 넉넉히 되지만, **배포된 사이트에서는 사진을 1~2장, 그것도 가급적 1MB 이하로 줄여서 올리는 걸 권장**해요. 용량이 너무 크면 "사진 첨부 없이 다시 시도해 주세요" 식으로 실패할 수 있어요.
 
 ## 폴더 구조
 
 ```
 chungju-blog-generator/
 ├── public/
-│   ├── index.html   # 입력 폼 + 출력 화면
-│   ├── style.css     # 디자인
-│   └── script.js     # 버튼 클릭 시 서버 호출 로직
-├── server.js          # Claude API 호출 서버
-├── .env               # API 키 (git에 올라가지 않음)
-├── .env.example       # 키 입력 예시
+│   ├── index.html    # 입력 폼 + 출력 화면
+│   ├── style.css      # 디자인
+│   └── script.js      # 버튼 클릭 시 서버 호출 로직
+├── lib/
+│   └── generate.js    # Claude API 호출 핵심 로직 (로컬/배포 공통)
+├── api/
+│   └── generate.js    # Vercel 배포용 서버리스 함수
+├── server.js           # 로컬 실행용 Express 서버
+├── vercel.json          # Vercel 정적 파일 경로 설정
+├── .env                 # API 키 (git에 올라가지 않음, 로컬 전용)
+├── .env.example         # 키 입력 예시
 └── package.json
 ```
