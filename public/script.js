@@ -5,15 +5,63 @@ const form = document.getElementById('blog-form');
 const generateBtn = document.getElementById('generate-btn');
 const output = document.getElementById('output');
 const copyBtn = document.getElementById('copy-btn');
+const photosInput = document.getElementById('photos');
+const photoPreview = document.getElementById('photo-preview');
+
+const MAX_PHOTOS = 5;
+const MAX_PHOTO_MB = 5;
+
+// 사진을 선택하면, 몇 번째 사진인지 알 수 있도록 작은 미리보기를 보여줍니다.
+photosInput.addEventListener('change', () => {
+  photoPreview.innerHTML = '';
+  const files = Array.from(photosInput.files);
+
+  if (files.length > MAX_PHOTOS) {
+    alert(`사진은 최대 ${MAX_PHOTOS}장까지만 올릴 수 있어요.`);
+    photosInput.value = '';
+    return;
+  }
+
+  files.forEach((file, index) => {
+    if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
+      alert(`"${file.name}" 파일이 너무 커요 (최대 ${MAX_PHOTO_MB}MB). 더 작은 사진으로 올려주세요.`);
+      photosInput.value = '';
+      photoPreview.innerHTML = '';
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const item = document.createElement('div');
+    item.className = 'photo-item';
+    item.innerHTML = `<img src="${url}" alt="사진 ${index + 1}"><div class="photo-num">사진 ${index + 1}</div>`;
+    photoPreview.appendChild(item);
+  });
+});
+
+// 사진 파일을 서버로 보낼 수 있게 base64 문자열로 바꿔줍니다.
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // reader.result 형식: "data:image/png;base64,AAAA..." → 앞부분(콤마 앞)을 잘라내야 함
+      const [, base64] = reader.result.split(',');
+      resolve({ mediaType: file.type, data: base64 });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+
+  const photoFiles = Array.from(photosInput.files);
+  const photos = await Promise.all(photoFiles.map(fileToBase64));
 
   const payload = {
     title: document.getElementById('title').value.trim(),
     target: document.getElementById('target').value.trim(),
     keyInfo: document.getElementById('keyInfo').value.trim(),
-    photoInfo: document.getElementById('photoInfo').value.trim(),
+    photos,
   };
 
   // 버튼/출력창을 '생성 중' 상태로 전환

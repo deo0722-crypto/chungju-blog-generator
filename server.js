@@ -15,11 +15,16 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-app.use(express.json());
+// 사진을 base64로 주고받으려면 기본 요청 크기 제한(100kb)로는 부족해서 넉넉하게 늘립니다.
+app.use(express.json({ limit: '30mb' }));
 app.use(express.static('public')); // public 폴더의 index.html, style.css, script.js를 그대로 제공
 
 // 프롬프트 템플릿: 사용자가 입력한 값을 아래 양식에 채워서 Claude에게 전달합니다.
-function buildPrompt({ title, target, keyInfo, photoInfo }) {
+function buildPrompt({ title, target, keyInfo, photoCount }) {
+  const photoInstruction = photoCount > 0
+    ? `사진 ${photoCount}장이 순서대로 첨부되어 있어(사진1~사진${photoCount}). 각 사진을 실제로 보고, 그 내용에 어울리는 글 위치에 [사진 N: 설명] 형태로 자연스럽게 배치해 줘.`
+    : `첨부된 사진은 없어. 글 흐름상 사진이 들어가면 좋을 위치에 [사진 X: 설명] 형태로 자리만 표시해 줘.`;
+
   return `너는 공연·예술 전문 마케터이자 블로그 콘텐츠 에디터야. 충주문화관광재단 문화도시센터의 공연 홍보 및 티켓 판매 촉진을 위한 네이버 블로그 포스팅 초안을 작성해 줘.
 
 [작성 목표]
@@ -30,7 +35,7 @@ function buildPrompt({ title, target, keyInfo, photoInfo }) {
 - 공연명: ${title}
 - 타겟 독자: ${target}
 - 핵심 정보: ${keyInfo}
-- 사진 정보: ${photoInfo}
+- 사진 정보: ${photoInstruction}
 
 [작성 가이드라인]
 1. 제목: 타겟의 클릭을 유발하는 매력적인 제목 3개 추천 ('충주' 키워드 포함)
@@ -40,14 +45,29 @@ function buildPrompt({ title, target, keyInfo, photoInfo }) {
 
 app.post('/api/generate', async (req, res) => {
   try {
-    const { title, target, keyInfo, photoInfo } = req.body;
+    const { title, target, keyInfo, photos } = req.body;
+    const photoList = Array.isArray(photos) ? photos.slice(0, 5) : []; // 안전하게 최대 5장까지만
 
     // 최소한의 입력값 검증
     if (!title || !target || !keyInfo) {
       return res.status(400).json({ error: '공연명, 타겟 독자, 핵심 정보는 필수 입력값이에요.' });
     }
 
-    const prompt = buildPrompt({ title, target, keyInfo, photoInfo: photoInfo || '없음' });
+    const prompt = buildPrompt({ title, target, keyInfo, photoCount: photoList.length });
+
+    // Claude에게 보낼 내용 구성: 사진(이미지 블록)들을 먼저 넣고, 그다음 글 요청(텍스트)을 넣습니다.
+    // (사진을 먼저 보여줘야 AI가 사진 내용을 참고해서 텍스트를 작성할 수 있어요.)
+    const content = [
+      ...photoList.map((photo) => ({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: photo.mediaType,
+          data: photo.data,
+        },
+      })),
+      { type: 'text', text: prompt },
+    ];
 
     const message = await anthropic.messages.create({
       // 가장 성능이 좋은 최신 모델을 기본값으로 사용합니다.
@@ -56,7 +76,7 @@ app.post('/api/generate', async (req, res) => {
       // opus 모델은 답변 전에 내부적으로 "생각하는" 블록을 함께 반환하므로,
       // 실제 블로그 글 분량까지 넉넉히 나오도록 여유 있게 잡습니다.
       max_tokens: 4096,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{ role: 'user', content }],
     });
 
     // content 배열에는 'thinking'(생각 과정) 블록과 'text'(실제 답변) 블록이 섞여 올 수 있어서,

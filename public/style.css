@@ -71,6 +71,45 @@ form input:focus, form textarea:focus {
   border-color: #b8622f;
 }
 
+form input[type="file"] {
+  padding: 8px;
+  background: #fbfaf6;
+}
+
+.hint {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.photo-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.photo-preview .photo-item {
+  position: relative;
+  width: 84px;
+}
+
+.photo-preview img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #d8d4c8;
+  display: block;
+}
+
+.photo-preview .photo-num {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 2px;
+}
+
 #generate-btn {
   margin-top: 20px;
   width: 100%;

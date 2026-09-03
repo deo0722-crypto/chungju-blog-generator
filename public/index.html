@@ -25,8 +25,10 @@
           <label for="keyInfo">주요 홍보 내용 · 일정 · 가격</label>
           <textarea id="keyInfo" name="keyInfo" rows="6" placeholder="공연 소개, 일시, 장소, 티켓 가격, 예매처 등을 자유롭게 적어주세요." required></textarea>
 
-          <label for="photoInfo">첨부할 사진/이미지 정보 (선택)</label>
-          <input type="text" id="photoInfo" name="photoInfo" placeholder="예: 사진1 포스터, 사진2 공연장 전경, 사진3 리허설 현장" />
+          <label for="photos">첨부할 사진 (선택, 최대 5장)</label>
+          <input type="file" id="photos" name="photos" accept="image/*" multiple />
+          <p class="hint">사진을 올리면 AI가 실제로 보고 어느 위치에 넣으면 좋을지 알아서 정해줘요.</p>
+          <div id="photo-preview" class="photo-preview"></div>
 
           <button type="submit" id="generate-btn">블로그 글 생성하기</button>
         </form>
