@@ -18,9 +18,24 @@ module.exports = async (req, res) => {
   } catch (err) {
     console.error('Claude API 호출 오류:', err.message);
     const statusCode = err.statusCode || 500;
-    const message = statusCode === 400
-      ? err.message
-      : 'AI 글 생성 중 오류가 발생했어요. API 키가 올바른지 확인해 주세요.';
-    res.status(statusCode).json({ error: message });
+
+    if (statusCode === 400) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+
+    // 원인을 바로 알 수 있도록 실제 오류 내용을 함께 알려줍니다.
+    // (API 키 값 자체는 절대 응답에 포함되지 않아요.)
+    const detail = err.status === 401
+      ? 'API 키가 올바르지 않아요. Vercel의 환경변수(ANTHROPIC_API_KEY) 값을 다시 확인해 주세요.'
+      : err.status === 400
+        ? `요청 형식 오류: ${err.message}`
+        : err.status === 429
+          ? '요청이 너무 많거나 사용 한도를 초과했어요. Anthropic 콘솔의 Billing을 확인해 주세요.'
+          : !process.env.ANTHROPIC_API_KEY
+            ? 'ANTHROPIC_API_KEY 환경변수가 설정되어 있지 않아요.'
+            : `알 수 없는 오류: ${err.message}`;
+
+    res.status(statusCode).json({ error: `AI 글 생성 실패 — ${detail}` });
   }
 };
